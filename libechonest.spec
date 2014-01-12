@@ -47,7 +47,7 @@ cd %{_target_platform}
 %{__make}
 
 %if %{with tests}
-export PKG_CONFIG_PATH=$RPM_BUILD_ROOT%{_npkgconfigdir}:$RPM_BUILD_ROOT%{_pkgconfigdir}
+export PKG_CONFIG_PATH=$(pwd)
 test "$(pkg-config --modversion libechonest)" = "%{version}"
 %{__make} test
 %endif
