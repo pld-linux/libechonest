@@ -19,6 +19,11 @@ BuildRequires:	qt4-build
 BuildRequires:	rpmbuild(macros) >= 1.605
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
+# Unresolved symbol __stack_chk_fail in libechonest.so.2.1.0
+%ifarch i486
+%define	skip_post_check_so	libechonest.so.%{version}
+%endif
+
 %description
 libechonest is a collection of C++/Qt classes designed to make a
 developer's life easy when trying to use the APIs provided by The Echo
