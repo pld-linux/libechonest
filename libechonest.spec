@@ -14,6 +14,7 @@ URL:		https://projects.kde.org/projects/playground/libs/libechonest
 BuildRequires:	QtNetwork-devel
 BuildRequires:	cmake
 BuildRequires:	qjson-devel
+BuildRequires:	qt4-build
 BuildRequires:	rpmbuild(macros) >= 1.605
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
