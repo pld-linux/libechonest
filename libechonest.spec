@@ -5,7 +5,7 @@
 Summary:	C++ wrapper for the Echo Nest API
 Name:		libechonest
 Version:	2.1.0
-Release:	1
+Release:	2
 License:	GPL v2+
 Source0:	http://files.lfranchi.com/%{name}-%{version}.tar.bz2
 # Source0-md5:	96d98dbc5b3b155b277a9901d1133c5e
