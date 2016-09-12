@@ -14,20 +14,23 @@ Source0:	http://files.lfranchi.com/%{name}-%{version}.tar.bz2
 # Source0-md5:	d8c60545b056145dc66882971a0acf9c
 URL:		https://projects.kde.org/projects/playground/libs/libechonest
 BuildRequires:	cmake
+BuildRequires:	libstdc++-devel
 BuildRequires:	pkgconfig
-BuildRequires:	qjson-devel
 %if %{with qt4}
+BuildRequires:	QtCore-devel
 BuildRequires:	QtNetwork-devel
+BuildRequires:	qjson-devel
 BuildRequires:	qt4-build
+BuildRequires:	qt4-qmake
 %endif
 %if %{with qt5}
 BuildRequires:	Qt5Network-devel
+BuildRequires:	Qt5Xml-devel
+BuildRequires:	qt5-build
+BuildRequires:	qt5-qmake
 %endif
 BuildRequires:	rpmbuild(macros) >= 1.605
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
-
-# includedir files "conflict"
-%define		_duplicate_files_terminate_build   0
 
 # Unresolved symbol __stack_chk_fail in libechonest.so.2.1.0
 %ifarch i486
@@ -69,6 +72,7 @@ Development files for libechonest-qt5.
 %setup -q
 
 %build
+%if %{with qt4}
 install -d build-qt4
 cd build-qt4
 %cmake \
@@ -84,6 +88,7 @@ test "$(pkg-config --modversion libechonest)" = "%{version}"
 %endif
 
 cd ..
+%endif
 
 %if %{with qt5}
 install -d build-qt5
@@ -139,13 +144,15 @@ rm -rf $RPM_BUILD_ROOT
 
 %if %{with qt5}
 %files -n libechonest-qt5
+%defattr(644,root,root,755)
 %doc AUTHORS README TODO
 %attr(755,root,root) %{_libdir}/libechonest5.so.*.*.*
 # yes, SONAME is "libechonest5.so.2.3"
 %ghost %{_libdir}/libechonest5.so.2.3
 
 %files -n libechonest-qt5-devel
-%{_includedir}/echonest
+%defattr(644,root,root,755)
+%{_includedir}/echonest5
 %{_libdir}/libechonest5.so
 %{_pkgconfigdir}/libechonest5.pc
 %endif
