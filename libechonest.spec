@@ -1,6 +1,8 @@
 #
 # Conditional build:
 %bcond_with	tests		# build with tests. tests need active internet connection
+%bcond_without	qt4			# Qt4
+%bcond_without	qt5			# Qt5
 
 Summary:	C++ wrapper for the Echo Nest API
 Name:		libechonest
@@ -11,13 +13,21 @@ Group:		Libraries
 Source0:	http://files.lfranchi.com/%{name}-%{version}.tar.bz2
 # Source0-md5:	d8c60545b056145dc66882971a0acf9c
 URL:		https://projects.kde.org/projects/playground/libs/libechonest
-BuildRequires:	QtNetwork-devel
 BuildRequires:	cmake
 BuildRequires:	pkgconfig
 BuildRequires:	qjson-devel
+%if %{with qt4}
+BuildRequires:	QtNetwork-devel
 BuildRequires:	qt4-build
+%endif
+%if %{with qt5}
+BuildRequires:	Qt5Network-devel
+%endif
 BuildRequires:	rpmbuild(macros) >= 1.605
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
+
+# includedir files "conflict"
+%define		_duplicate_files_terminate_build   0
 
 # Unresolved symbol __stack_chk_fail in libechonest.so.2.1.0
 %ifarch i486
@@ -38,25 +48,70 @@ Requires:	%{name} = %{version}-%{release}
 The %{name}-devel package contains libraries and header files for
 developing applications that use %{name}.
 
+%package -n libechonest-qt5
+Summary:	libechonest Qt5 bindings
+Group:		Libraries
+
+%description -n libechonest-qt5
+libechonest is a collection of Qt5 classes designed to make a
+developer's life easy when trying to use the APIs provided by The Echo
+Nest.
+
+%package -n libechonest-qt5-devel
+Summary:	Development files for libechonest-qt5
+Group:		Development/Libraries
+Requires:	libechonest-qt5 = %{version}-%{release}
+
+%description -n libechonest-qt5-devel
+Development files for libechonest-qt5.
+
 %prep
 %setup -q
 
 %build
 install -d build-qt4
 cd build-qt4
-%cmake ..
+%cmake \
+	-DBUILD_WITH_QT4:BOOL=ON \
+	-DECHONEST_BUILD_TESTS:BOOL=%{?with_tests:ON}%{!?with_tests:OFF} \
+	..
 %{__make}
 
 %if %{with tests}
 export PKG_CONFIG_PATH=$(pwd)
 test "$(pkg-config --modversion libechonest)" = "%{version}"
-%{__make} test
+%{__make} test ARGS="--timeout 300 --output-on-failure"
+%endif
+
+cd ..
+
+%if %{with qt5}
+install -d build-qt5
+cd build-qt5
+%cmake \
+	-DBUILD_WITH_QT4:BOOL=OFF \
+	-DECHONEST_BUILD_TESTS:BOOL=%{?with_tests:ON}%{!?with_tests:OFF} \
+	..
+%{__make}
+
+%if %{with tests}
+export PKG_CONFIG_PATH=$(pwd)
+test "$(pkg-config --modversion libechonest5)" = "%{version}"
+%{__make} test ARGS="--timeout 300 --output-on-failure"
+%endif
 %endif
 
 %install
 rm -rf $RPM_BUILD_ROOT
+%if %{with qt4}
 %{__make} -C build-qt4 install/fast \
 	DESTDIR=$RPM_BUILD_ROOT
+%endif
+
+%if %{with qt5}
+%{__make} -C build-qt5 install/fast \
+	DESTDIR=$RPM_BUILD_ROOT
+%endif
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -64,15 +119,33 @@ rm -rf $RPM_BUILD_ROOT
 %post	-p /sbin/ldconfig
 %postun	-p /sbin/ldconfig
 
+%post	-n libechonest-qt5 -p /sbin/ldconfig
+%postun	-n libechonest-qt5 -p /sbin/ldconfig
+
+%if %{with qt4}
 %files
 %defattr(644,root,root,755)
-%doc AUTHORS COPYING README TODO
+%doc AUTHORS README TODO
 %attr(755,root,root) %{_libdir}/libechonest.so.*.*.*
 # yes, SONAME is "libechonest.so.2.3"
 %ghost %{_libdir}/libechonest.so.2.3
 
 %files devel
 %defattr(644,root,root,755)
-%{_includedir}/echonest/
+%{_includedir}/echonest
 %{_libdir}/libechonest.so
 %{_pkgconfigdir}/libechonest.pc
+%endif
+
+%if %{with qt5}
+%files -n libechonest-qt5
+%doc AUTHORS README TODO
+%attr(755,root,root) %{_libdir}/libechonest5.so.*.*.*
+# yes, SONAME is "libechonest5.so.2.3"
+%ghost %{_libdir}/libechonest5.so.2.3
+
+%files -n libechonest-qt5-devel
+%{_includedir}/echonest
+%{_libdir}/libechonest5.so
+%{_pkgconfigdir}/libechonest5.pc
+%endif
